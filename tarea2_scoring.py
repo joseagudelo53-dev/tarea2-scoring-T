@@ -1,22 +1,22 @@
 import streamlit as st
 import math
-
+ 
 # ─── PAGE CONFIG ────────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="Máquina de Puntuación — Letra T",
     page_icon="🔠",
     layout="wide",
 )
-
+ 
 # ─── CUSTOM CSS ─────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap');
-
+ 
   html, body, [class*="css"] { font-family: 'Syne', sans-serif; background-color: #0d0d0d; color: #f0ede6; }
   .stApp { background: #0d0d0d; }
   h1, h2, h3 { font-family: 'Syne', sans-serif; font-weight: 800; }
-
+ 
   [data-testid="stMetricValue"] {
     font-family: 'Space Mono', monospace !important;
     font-size: 1.8rem !important;
@@ -34,7 +34,7 @@ st.markdown("""
     border-radius: 12px;
     padding: 10px 14px;
   }
-
+ 
   .stButton > button {
     font-family: 'Space Mono', monospace;
     background: #1a1a1a;
@@ -46,7 +46,7 @@ st.markdown("""
     transition: all 0.2s;
   }
   .stButton > button:hover { background: #f0c040; color: #0d0d0d; }
-
+ 
   .card {
     background: #141414;
     border: 1px solid #222;
@@ -64,16 +64,16 @@ st.markdown("""
   }
   .pixel-on  { display:inline-block; width:32px; height:32px; background:#f0c040; border-radius:4px; margin:2px; }
   .pixel-off { display:inline-block; width:32px; height:32px; background:#1a1a1a; border:1px solid #333; border-radius:4px; margin:2px; }
-
+ 
   .score-pos { color: #5fdf6f; font-family:'Space Mono',monospace; font-size:1.4rem; font-weight:700; }
   .score-neg { color: #df5f5f; font-family:'Space Mono',monospace; font-size:1.4rem; font-weight:700; }
   .score-neu { color: #f0c040; font-family:'Space Mono',monospace; font-size:1.4rem; font-weight:700; }
-
+ 
   hr { border-color: #222; }
 </style>
 """, unsafe_allow_html=True)
-
-
+ 
+ 
 # ─── IMÁGENES PREDEFINIDAS ───────────────────────────────────────────────────────
 # Grilla 3x3, fila por fila (9 pixeles)
 IMAGES = {
@@ -125,28 +125,28 @@ IMAGES = {
         "desc": "Sin pixeles — NO es T"
     },
 }
-
+ 
 IMAGEN_NOMBRES = list(IMAGES.keys())
-
+ 
 # ─── SESSION STATE ───────────────────────────────────────────────────────────────
 if "pesos" not in st.session_state:
     # Pesos iniciales: favorecen la fila superior y el palo central
     # pos 0,1,2 = fila 1 | pos 3,4,5 = fila 2 | pos 6,7,8 = fila 3
     st.session_state.pesos = [1.0, 2.0, 1.0,  -1.0, 2.0, -1.0,  -1.0, 2.0, -1.0]
-
+ 
 if "threshold" not in st.session_state:
     st.session_state.threshold = 2.0
-
+ 
 if "imagen_sel" not in st.session_state:
     st.session_state.imagen_sel = "T clásica"
-
+ 
 if "custom_pixels" not in st.session_state:
     st.session_state.custom_pixels = [0]*9
-
+ 
 if "modo" not in st.session_state:
     st.session_state.modo = "predefinida"
-
-
+ 
+ 
 # ─── FUNCIÓN DE PUNTUACIÓN ───────────────────────────────────────────────────────
 def calcular_puntaje(pixels, pesos):
     """y = Σ(wi * xi) — sin librerías externas."""
@@ -157,15 +157,15 @@ def calcular_puntaje(pixels, pesos):
         total += contribucion
         pasos.append((i, pixels[i], pesos[i], contribucion))
     return total, pasos
-
-
+ 
+ 
 def pixel_html(val, size=36):
     if val == 1:
         return f'<div style="display:inline-block;width:{size}px;height:{size}px;background:#f0c040;border-radius:5px;margin:2px;"></div>'
     else:
         return f'<div style="display:inline-block;width:{size}px;height:{size}px;background:#1a1a1a;border:1px solid #333;border-radius:5px;margin:2px;"></div>'
-
-
+ 
+ 
 def grilla_html(pixels, size=36):
     html = '<div style="line-height:0;">'
     for row in range(3):
@@ -175,8 +175,8 @@ def grilla_html(pixels, size=36):
         html += '</div>'
     html += '</div>'
     return html
-
-
+ 
+ 
 def peso_html(pesos):
     """Muestra los pesos en grilla 3x3."""
     html = '<div style="line-height:0;">'
@@ -189,8 +189,8 @@ def peso_html(pesos):
         html += '</div>'
     html += '</div>'
     return html
-
-
+ 
+ 
 # ─── TÍTULO ──────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div style="text-align:center; padding: 28px 0 6px 0;">
@@ -203,24 +203,24 @@ st.markdown("""
   </p>
 </div>
 """, unsafe_allow_html=True)
-
+ 
 st.markdown("---")
-
+ 
 # ─── LAYOUT PRINCIPAL ────────────────────────────────────────────────────────────
 col_izq, col_centro, col_der = st.columns([1.2, 1.3, 1.5], gap="large")
-
-
+ 
+ 
 # ══════════════════════════════════════════
 # COLUMNA IZQUIERDA — Imagen de entrada
 # ══════════════════════════════════════════
 with col_izq:
     st.markdown("### 🖼️ Imagen de entrada")
     st.markdown('<div class="section-title">Elige o dibuja una imagen 3×3</div>', unsafe_allow_html=True)
-
+ 
     modo = st.radio("Modo", ["Imagen predefinida", "Dibujar mi propia imagen"],
                     horizontal=True, label_visibility="collapsed")
     st.session_state.modo = modo
-
+ 
     if modo == "Imagen predefinida":
         nombre = st.selectbox("Selecciona una imagen", IMAGEN_NOMBRES,
                                index=IMAGEN_NOMBRES.index(st.session_state.imagen_sel))
@@ -230,7 +230,7 @@ with col_izq:
         es_T = datos["es_T"]
         etiqueta = "✅ Es una T" if es_T else "❌ No es una T"
         etiqueta_color = "#5fdf6f" if es_T else "#df5f5f"
-
+ 
         st.markdown(f"""
         <div class="card" style="text-align:center; margin-top:12px;">
           <div class="section-title">Vista previa</div>
@@ -239,7 +239,7 @@ with col_izq:
           <div style="margin-top:10px; font-family:'Space Mono',monospace; font-size:0.85rem; color:{etiqueta_color}; font-weight:700;">{etiqueta}</div>
         </div>
         """, unsafe_allow_html=True)
-
+ 
     else:
         st.markdown('<div class="section-title" style="margin-top:10px;">Haz clic en los pixeles para activarlos/desactivarlos</div>', unsafe_allow_html=True)
         cols_grid = [st.columns(3) for _ in range(3)]
@@ -252,15 +252,15 @@ with col_izq:
                     if st.button(label, key=f"px_{idx}", use_container_width=True):
                         st.session_state.custom_pixels[idx] = 1 - val
                         st.rerun()
-
+ 
         pixels_activos = st.session_state.custom_pixels
         es_T = None
         etiqueta = "— Sin etiqueta"
-
+ 
         if st.button("🗑️ Limpiar grilla", use_container_width=True):
             st.session_state.custom_pixels = [0]*9
             st.rerun()
-
+ 
         st.markdown(f"""
         <div class="card" style="text-align:center; margin-top:10px;">
           <div class="section-title">Vista previa</div>
@@ -268,22 +268,22 @@ with col_izq:
           <div style="font-family:'Space Mono',monospace; font-size:0.8rem; color:#888;">Imagen personalizada</div>
         </div>
         """, unsafe_allow_html=True)
-
+ 
     # Representación matricial
     st.markdown("#### Representación matricial")
     mat_str = ""
     for row in range(3):
         mat_str += "  ".join(str(pixels_activos[row*3+col]) for col in range(3)) + "\n"
     st.code(mat_str, language=None)
-
-
+ 
+ 
 # ══════════════════════════════════════════
 # COLUMNA CENTRO — Pesos
 # ══════════════════════════════════════════
 with col_centro:
     st.markdown("### 🎛️ Ajuste de pesos")
     st.markdown('<div class="section-title">Cada posición de la grilla tiene su propio peso</div>', unsafe_allow_html=True)
-
+ 
     # Presets de pesos
     st.markdown("**Presets rápidos:**")
     pc1, pc2, pc3 = st.columns(3)
@@ -299,16 +299,16 @@ with col_centro:
         if st.button("🔄 Resetear", use_container_width=True):
             st.session_state.pesos = [0.0]*9
             st.rerun()
-
+ 
     st.markdown("---")
-
+ 
     # Sliders de pesos en grilla 3x3
     POSICIONES = [
         "Fila 1, Col 1", "Fila 1, Col 2", "Fila 1, Col 3",
         "Fila 2, Col 1", "Fila 2, Col 2", "Fila 2, Col 3",
         "Fila 3, Col 1", "Fila 3, Col 2", "Fila 3, Col 3",
     ]
-
+ 
     for row in range(3):
         cols_w = st.columns(3)
         for col in range(3):
@@ -322,7 +322,7 @@ with col_centro:
                     key=f"peso_{idx}",
                 )
                 st.session_state.pesos[idx] = nuevo
-
+ 
     st.markdown("---")
     st.markdown("**Threshold (umbral de decisión):**")
     st.session_state.threshold = st.slider(
@@ -332,7 +332,7 @@ with col_centro:
         step=0.25,
         key="threshold_slider"
     )
-
+ 
     # Vista de pesos en grilla
     st.markdown("#### Mapa de pesos actual")
     st.markdown(f"""
@@ -341,21 +341,21 @@ with col_centro:
       <div style="margin:10px 0;">{peso_html(st.session_state.pesos)}</div>
     </div>
     """, unsafe_allow_html=True)
-
-
+ 
+ 
 # ══════════════════════════════════════════
 # COLUMNA DERECHA — Resultados
 # ══════════════════════════════════════════
 with col_der:
     st.markdown("### 📊 Resultados")
-
+ 
     pesos = st.session_state.pesos
     threshold = st.session_state.threshold
     puntaje, pasos = calcular_puntaje(pixels_activos, pesos)
     decision = puntaje > threshold
     decision_str = "✅ Es una T" if decision else "❌ No es una T"
     decision_color = "#5fdf6f" if decision else "#df5f5f"
-
+ 
     # Métricas principales
     m1, m2, m3 = st.columns(3)
     with m1:
@@ -364,7 +364,7 @@ with col_der:
         st.metric("Umbral θ", f"{threshold:+.2f}")
     with m3:
         st.metric("Pixeles ON", sum(pixels_activos))
-
+ 
     st.markdown(f"""
     <div class="card" style="text-align:center; margin-top:8px;">
       <div class="section-title">Decisión final</div>
@@ -376,7 +376,7 @@ with col_der:
       </div>
     </div>
     """, unsafe_allow_html=True)
-
+ 
     # Verificación si hay etiqueta conocida
     if es_T is not None:
         correcto = decision == es_T
@@ -390,50 +390,33 @@ with col_der:
           </div>
         </div>
         """, unsafe_allow_html=True)
-
+ 
     st.markdown("---")
-
+ 
     # Desglose paso a paso
     st.markdown("#### 🔢 Cálculo paso a paso")
-    st.markdown('<div class="section-title">y = Σ(wi · xi) — contribución de cada pixel</div>', unsafe_allow_html=True)
-
-    # Tabla de pasos
-    filas_html = ""
+    st.markdown("y = Σ(wᵢ · xᵢ) — contribución de cada pixel")
+ 
+    import pandas as pd
+    tabla_pasos = []
     for (i, xi, wi, contrib) in pasos:
         row_n = i // 3 + 1
         col_n = i % 3 + 1
-        px_html = pixel_html(xi, 18)
-        contrib_color = "#5fdf6f" if contrib > 0 else "#df5f5f" if contrib < 0 else "#888"
-        activo = "ON" if xi == 1 else "off"
-        activo_color = "#f0c040" if xi == 1 else "#555"
-        filas_html += f"""
-        <div style="display:grid; grid-template-columns:0.8fr 0.5fr 0.5fr 0.6fr 0.7fr;
-                    gap:4px; font-family:'Space Mono',monospace; font-size:0.72rem;
-                    color:#ccc; padding:5px 4px; border-bottom:1px solid #1e1e1e; align-items:center;">
-          <div>pos [{row_n},{col_n}]</div>
-          <div style="color:{activo_color};">{activo}</div>
-          <div>x={xi}</div>
-          <div>w={wi:+.2f}</div>
-          <div style="color:{contrib_color}; font-weight:700;">{contrib:+.2f}</div>
-        </div>"""
-
-    st.markdown(f"""
-    <div class="card" style="padding:10px 14px;">
-      <div style="display:grid; grid-template-columns:0.8fr 0.5fr 0.5fr 0.6fr 0.7fr;
-                  gap:4px; font-family:'Space Mono',monospace; font-size:0.65rem;
-                  color:#555; text-transform:uppercase; letter-spacing:1px; padding:0 4px 6px 4px;">
-        <div>Posición</div><div>Estado</div><div>xᵢ</div><div>wᵢ</div><div>wᵢ·xᵢ</div>
-      </div>
-      {filas_html}
-      <div style="font-family:'Space Mono',monospace; font-size:0.85rem; color:#f0c040;
-                  font-weight:700; text-align:right; padding:8px 4px 2px 4px; border-top:1px solid #333; margin-top:6px;">
-        TOTAL = {puntaje:+.2f}
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
-
+        tabla_pasos.append({
+            "Posición": f"[{row_n},{col_n}]",
+            "Estado":   "ON" if xi == 1 else "off",
+            "xᵢ":       xi,
+            "wᵢ":       f"{wi:+.2f}",
+            "wᵢ·xᵢ":    f"{contrib:+.2f}",
+        })
+ 
+    df_pasos = pd.DataFrame(tabla_pasos)
+    st.dataframe(df_pasos, use_container_width=True, hide_index=True)
+    st.markdown(f"**TOTAL y = {puntaje:+.2f}**")
+ 
+ 
     st.markdown("---")
-
+ 
     # Evaluación de todas las imágenes predefinidas
     st.markdown("#### 🏆 Ranking de todas las imágenes")
     ranking = []
@@ -442,33 +425,27 @@ with col_der:
         d = p > threshold
         correcto = d == datos_img["es_T"]
         ranking.append((nombre_img, datos_img["es_T"], p, d, correcto))
-
+ 
     ranking.sort(key=lambda x: x[2], reverse=True)
-
+ 
     total_correctos = sum(1 for r in ranking if r[4])
-
-    st.markdown(f"""
-    <div style="font-family:'Space Mono',monospace; font-size:0.8rem; color:#aaa; margin-bottom:8px;">
-      Clasificadas correctamente: <span style="color:#f0c040; font-weight:700;">{total_correctos}/{len(ranking)}</span>
-    </div>
-    """, unsafe_allow_html=True)
-
+ 
+    st.markdown(f"**Clasificadas correctamente: {total_correctos}/{len(ranking)}**")
+ 
+    import pandas as pd
+    ranking_rows = []
     for (nom, real_T, punt, dec, ok) in ranking:
-        ok_sym = "✅" if ok else "❌"
-        real_sym = "T" if real_T else "~T"
-        punt_color = "#5fdf6f" if punt > threshold else "#df5f5f"
-        activo_style = "border-left: 3px solid #f0c040;" if nom == st.session_state.imagen_sel else ""
-        st.markdown(f"""
-        <div style="display:flex; justify-content:space-between; align-items:center;
-                    padding:5px 10px; margin-bottom:3px; background:#141414;
-                    border-radius:8px; border:1px solid #1e1e1e; {activo_style}">
-          <span style="font-family:'Space Mono',monospace; font-size:0.72rem; color:#ccc;">{ok_sym} {nom}</span>
-          <span style="font-family:'Space Mono',monospace; font-size:0.7rem; color:#666;">[{real_sym}]</span>
-          <span style="font-family:'Space Mono',monospace; font-size:0.75rem; color:{punt_color}; font-weight:700;">{punt:+.2f}</span>
-        </div>
-        """, unsafe_allow_html=True)
-
-
+        ranking_rows.append({
+            "Imagen":    nom,
+            "Tipo":      "T real" if real_T else "No T",
+            "Puntaje":   f"{punt:+.2f}",
+            "Decisión":  "Es T" if dec else "No T",
+            "✓/✗":       "✅" if ok else "❌",
+        })
+    df_ranking = pd.DataFrame(ranking_rows)
+    st.dataframe(df_ranking, use_container_width=True, hide_index=True)
+ 
+ 
 # ─── FOOTER ──────────────────────────────────────────────────────────────────────
 st.markdown("---")
 st.markdown("""
